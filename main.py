@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 torch.manual_seed(42)
 np.random.seed(42)
 
+
 # ==========================================
 # 1. DOMAIN / SENSOR DRIFT DATASET GENERATOR
 # ==========================================
@@ -216,6 +217,8 @@ def main():
     axes[1].grid(True, linestyle='--', alpha=0.5)
 
     plt.tight_layout()
+    # Saves high-resolution chart output for GitHub README display
+    plt.savefig("benchmark_results.png", dpi=300)
     plt.show()
 
 if __name__ == "__main__":
