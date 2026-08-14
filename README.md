@@ -227,7 +227,7 @@ The overall pipeline can be summarized as:
                   │      Safe Prediction     │
                   └──────────────────────────┘
 
-## Repository Structure
+**## Repository Structure**
 
 ```text
 Resilient-Deep-Ensemble-TTA/
