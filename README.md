@@ -19,7 +19,7 @@ Developed as part of computational research into safe AI architectures, runtime 
   Separates predictive variance into **epistemic uncertainty** (model disagreement across ensemble members) and **aleatoric uncertainty** (inherent data noise).
 
 * **Split Conformal Prediction Shield:**
-  Calibrates a certified non-conformity threshold $\hat{q}_{\mathrm{epistemic}}$ on clean calibration data at a target coverage guarantee of:
+  Calibrates a calibrated non-conformity threshold $\hat{q}_{\mathrm{epistemic}}$ on clean calibration data at a target coverage of:
 
   $$
 1 - \alpha = 0.95
@@ -35,7 +35,7 @@ $$
 y \in [y_{\min}, y_{\max}]
 $$
 
-  together with epistemic uncertainty limits, projecting out-of-bound predictions back into certified safety boundaries.
+  together with epistemic uncertainty limits, projecting out-of-bound predictions back into the permitted safety boundaries.
 
 ---
 
@@ -72,7 +72,7 @@ These results demonstrate the intended interaction between **distribution-shift 
 
 ## Mathematical Formulation
 
-## 1. Epistemic & Aleatoric Variance Decomposition
+### 1. Epistemic & Aleatoric Variance Decomposition
 
 For an ensemble of $M$ probabilistic neural networks, each model produces a predictive mean $\mu_m(x)$ and predictive variance $\sigma_m^2(x)$:
 
@@ -88,7 +88,7 @@ The ensemble predictive mean is calculated as:
 
 $$
 \mu_{\mathrm{ensemble}}(x)
-
+=
 \frac{1}{M}
 \sum_{m=1}^{M}
 \mu_m(x)
@@ -100,12 +100,12 @@ Epistemic uncertainty represents uncertainty arising from model disagreement acr
 
 $$
 \sigma_{\mathrm{epistemic}}^2(x)
-
+=
 \frac{1}{M-1}
 \sum_{m=1}^{M}
 \left(
 \mu_m(x)
-
+-
 \mu_{\mathrm{ensemble}}(x)
 \right)^2
 $$
@@ -122,7 +122,7 @@ The average aleatoric variance across the ensemble is:
 
 $$
 \sigma_{\mathrm{aleatoric}}^2(x)
-
+=
 \frac{1}{M}
 \sum_{m=1}^{M}
 \sigma_m^2(x)
@@ -134,7 +134,7 @@ The total predictive variance is decomposed into epistemic and aleatoric compone
 
 $$
 \sigma_{\mathrm{total}}^2(x)
-
+=
 \sigma_{\mathrm{epistemic}}^2(x)
 +
 \sigma_{\mathrm{aleatoric}}^2(x)
@@ -144,12 +144,12 @@ or equivalently:
 
 $$
 \sigma_{\mathrm{total}}^2(x)
-
+=
 \frac{1}{M-1}
 \sum_{m=1}^{M}
 \left(
 \mu_m(x)
-
+-
 \mu_{\mathrm{ensemble}}(x)
 \right)^2
 +
@@ -160,7 +160,7 @@ $$
 
 ---
 
-## 2. Split Conformal Prediction Bound
+### 2. Split Conformal Prediction Bound
 
 Let the calibration dataset be:
 
@@ -186,7 +186,7 @@ For each calibration observation $x_i$, the epistemic uncertainty score is:
 
 $$
 s_i
-
+=
 \sigma_{\mathrm{epistemic}}^2(x_i)
 $$
 
@@ -194,7 +194,7 @@ The calibrated non-conformity threshold is then obtained from the empirical quan
 
 $$
 \hat{q}
-
+=
 \operatorname{Quantile}
 \left(
 \left{
@@ -214,7 +214,7 @@ For the reported experiment, the calibrated epistemic uncertainty threshold is:
 
 $$
 \hat{q}_{\mathrm{epistemic}}
-
+=
 0.005192
 $$
 
@@ -234,7 +234,7 @@ This threshold is used by the runtime conformal safety shield to monitor epistem
 
 ---
 
-## 3. Runtime Verification Condition
+### 3. Runtime Verification Condition
 
 During inference, the epistemic uncertainty of a new observation $x$ is compared against the calibrated threshold:
 
@@ -250,9 +250,7 @@ If instead:
 
 $$
 \sigma_{\mathrm{epistemic}}^2(x)
-
 >
-
 \hat{q}_{\mathrm{epistemic}}
 $$
 
@@ -260,7 +258,7 @@ the runtime safety mechanism can flag the prediction as exceeding the calibrated
 
 ---
 
-## 4. Output Safety Invariant
+### 4. Output Safety Invariant
 
 In addition to uncertainty monitoring, the runtime safety layer enforces the output range invariant:
 
@@ -284,11 +282,9 @@ If a prediction falls outside the permitted range, it can be projected back into
 
 $$
 \hat{y}_{\mathrm{safe}}
-
-\min
-\left(
-\max
-\left(
+=
+\min\left(
+\max\left(
 \hat{y},
 y_{\min}
 \right),
@@ -298,7 +294,7 @@ $$
 
 ---
 
-## 5. Combined Safety Condition
+### 5. Combined Safety Condition
 
 The runtime safety shield therefore evaluates both the epistemic uncertainty and the output-range invariant.
 
@@ -326,7 +322,7 @@ $$
 \sigma_{\mathrm{epistemic}}^2(x)
 &\leq
 \hat{q}_{\mathrm{epistemic}}
-[4pt]
+\\[4pt]
 \hat{y}(x)
 &\in
 [y_{\min},y_{\max}]
@@ -338,14 +334,14 @@ For the reported experiment:
 
 $$
 \hat{q}_{\mathrm{epistemic}}
-
+=
 0.005192
 $$
 
 with a nominal conformal coverage target of:
 
 $$
-95%
+95\%
 $$
 
 ---
@@ -493,7 +489,7 @@ $$
 
 The runtime safety layer combines two primary checks.
 
-### 1. Output Range Invariant
+#### 1. Output Range Invariant
 
 Predictions must satisfy:
 
@@ -503,7 +499,7 @@ $$
 
 Predictions outside this interval are projected back into the certified output range.
 
-### 2. Epistemic Uncertainty Constraint
+#### 2. Epistemic Uncertainty Constraint
 
 The epistemic uncertainty is compared against the calibrated conformal threshold:
 
