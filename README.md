@@ -287,7 +287,9 @@ The program will:
 
 ## Visualizations Generated
 
-Upon execution, the script generates a **two-panel diagnostic plot**.
+Upon execution, the script generates and saves a **two-panel diagnostic plot** (`benchmark_results.png`).
+
+![Resilient Deep Ensemble Benchmark Results](benchmark_results.png)
 
 ### Left Panel — Runtime Safety Shield & Online TTA
 
@@ -308,6 +310,8 @@ The right panel displays:
 * The calibrated conformal threshold.
 * The relationship between runtime uncertainty and the configured verification boundary.
 
+The reported threshold is:
+$$\hat{q}_{\text{epistemic}} = 0.005192$$
 The reported threshold is:
 $\hat{q}_{\text{epistemic}} = 0.005192$
 ---
