@@ -309,10 +309,7 @@ The right panel displays:
 * The relationship between runtime uncertainty and the configured verification boundary.
 
 The reported threshold is:
-
-$$
-\hat{q}_{\text{epistemic}} = 0.005192
-$$
+$\hat{q}_{\text{epistemic}} = 0.005192$
 ---
 
 ## Safety Mechanism
