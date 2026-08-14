@@ -235,9 +235,10 @@ The overall pipeline can be summarized as:
 ```text
 Resilient-Deep-Ensemble-TTA/
 │
-├── main.py              # Main execution script
-├── README.md            # Repository documentation
-└── .gitignore           # Python temporary files and cache exclusion
+├── main.py                <-- PASTE THIS ENTIRE CODE HERE
+├── README.md              <-- Repository documentation
+├── benchmark_results.png  <-- Saved chart output
+└── .gitignore
 ```
 
 ---
