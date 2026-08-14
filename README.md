@@ -396,7 +396,7 @@ The reported experiment uses:
 Clone the repository:
 
 ```bash
-git clone https://github.com/ikechukwuKamalu8/Resilient-Deep-Ensemble-TTA.git
+git clone https://github.com/ikechukwukamalu8/Resilient-Deep-Ensemble-TTA.git
 cd Resilient-Deep-Ensemble-TTA
 ```
 
