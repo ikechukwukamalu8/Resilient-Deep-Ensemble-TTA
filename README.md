@@ -1,7 +1,7 @@
 # Resilient Deep Ensemble with Conformal Safety Shield & Test-Time Adaptation (TTA)
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat\&logo=pytorch\&logoColor=white)](https://pytorch.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 An end-to-end implementation of a **probabilistic deep ensemble** integrated with **Split Conformal Prediction** runtime verification and **unsupervised Test-Time Adaptation (TTA)** under severe input sensor drift.
@@ -19,9 +19,11 @@ Developed as part of computational research into safe AI architectures, runtime 
   Separates predictive variance into **epistemic uncertainty** (model disagreement across ensemble members) and **aleatoric uncertainty** (inherent data noise).
 
 * **Split Conformal Prediction Shield:**
-  Calibrates a certified non-conformity threshold $\hat{q}_{\text{epistemic}}$ on clean calibration data at a target coverage guarantee of:
+  Calibrates a certified non-conformity threshold $\hat{q}_{\mathrm{epistemic}}$ on clean calibration data at a target coverage guarantee of:
 
-  $$1 - \alpha = 0.95$$
+  $$
+1 - \alpha = 0.95
+$$
 
 * **Online Test-Time Adaptation (TTA):**
   Performs unsupervised feature-normalization re-centering during inference using dynamic BatchNorm statistics without requiring true target $y$ labels.
@@ -29,7 +31,9 @@ Developed as part of computational research into safe AI architectures, runtime 
 * **Runtime Safety Projection:**
   A safety guard monitors range invariants:
 
-  $$y \in [y_{\min}, y_{\max}]$$
+  $$
+y \in [y_{\min}, y_{\max}]
+$$
 
   together with epistemic uncertainty limits, projecting out-of-bound predictions back into certified safety boundaries.
 
@@ -39,7 +43,9 @@ Developed as part of computational research into safe AI architectures, runtime 
 
 The system was evaluated under active physical sensor calibration drift with:
 
-$$\delta = +1.5$$
+$$
+\delta = +1.5
+$$
 
 applied to the input process data.
 
@@ -64,7 +70,7 @@ These results demonstrate the intended interaction between **distribution-shift 
 
 ---
 
-# Mathematical Formulation
+## Mathematical Formulation
 
 ## 1. Epistemic & Aleatoric Variance Decomposition
 
@@ -82,7 +88,6 @@ The ensemble predictive mean is calculated as:
 
 $$
 \mu_{\mathrm{ensemble}}(x)
-==========================
 
 \frac{1}{M}
 \sum_{m=1}^{M}
@@ -95,13 +100,11 @@ Epistemic uncertainty represents uncertainty arising from model disagreement acr
 
 $$
 \sigma_{\mathrm{epistemic}}^2(x)
-================================
 
 \frac{1}{M-1}
 \sum_{m=1}^{M}
 \left(
 \mu_m(x)
---------
 
 \mu_{\mathrm{ensemble}}(x)
 \right)^2
@@ -119,7 +122,6 @@ The average aleatoric variance across the ensemble is:
 
 $$
 \sigma_{\mathrm{aleatoric}}^2(x)
-================================
 
 \frac{1}{M}
 \sum_{m=1}^{M}
@@ -132,7 +134,6 @@ The total predictive variance is decomposed into epistemic and aleatoric compone
 
 $$
 \sigma_{\mathrm{total}}^2(x)
-============================
 
 \sigma_{\mathrm{epistemic}}^2(x)
 +
@@ -143,13 +144,11 @@ or equivalently:
 
 $$
 \sigma_{\mathrm{total}}^2(x)
-============================
 
 \frac{1}{M-1}
 \sum_{m=1}^{M}
 \left(
 \mu_m(x)
---------
 
 \mu_{\mathrm{ensemble}}(x)
 \right)^2
@@ -187,7 +186,6 @@ For each calibration observation $x_i$, the epistemic uncertainty score is:
 
 $$
 s_i
-===
 
 \sigma_{\mathrm{epistemic}}^2(x_i)
 $$
@@ -196,13 +194,12 @@ The calibrated non-conformity threshold is then obtained from the empirical quan
 
 $$
 \hat{q}
-=======
 
 \operatorname{Quantile}
 \left(
 \left{
 \sigma_{\mathrm{epistemic}}^2(x_i)
-\right}*{i=1}^{N*{\mathrm{calib}}},
+\right\}_{i=1}^{N_{\mathrm{calib}}},
 \frac{
 \left\lceil
 (N_{\mathrm{calib}}+1)(1-\alpha)
@@ -217,7 +214,6 @@ For the reported experiment, the calibrated epistemic uncertainty threshold is:
 
 $$
 \hat{q}_{\mathrm{epistemic}}
-============================
 
 0.005192
 $$
@@ -288,7 +284,6 @@ If a prediction falls outside the permitted range, it can be projected back into
 
 $$
 \hat{y}_{\mathrm{safe}}
-=======================
 
 \min
 \left(
@@ -330,11 +325,11 @@ $$
 \begin{aligned}
 \sigma_{\mathrm{epistemic}}^2(x)
 &\leq
-\hat{q}*{\mathrm{epistemic}}
+\hat{q}_{\mathrm{epistemic}}
 [4pt]
 \hat{y}(x)
 &\in
-[y*{\min},y_{\max}]
+[y_{\min},y_{\max}]
 \end{aligned}
 }
 $$
@@ -343,7 +338,6 @@ For the reported experiment:
 
 $$
 \hat{q}_{\mathrm{epistemic}}
-============================
 
 0.005192
 $$
@@ -490,7 +484,7 @@ The right panel displays:
 The threshold is:
 
 $$
-\hat{q}_{\text{epistemic}} = 0.005192
+\hat{q}_{\mathrm{epistemic}} = 0.005192
 $$
 
 ---
@@ -514,9 +508,9 @@ Predictions outside this interval are projected back into the certified output r
 The epistemic uncertainty is compared against the calibrated conformal threshold:
 
 $$
-\sigma^2_{\text{epistemic}}(x)
+\sigma_{\mathrm{epistemic}}^2(x)
 \leq
-\hat{q}_{\text{epistemic}}
+\hat{q}_{\mathrm{epistemic}}
 $$
 
 If the uncertainty exceeds the calibrated limit, the runtime safety mechanism can flag or constrain the prediction according to the implementation.
@@ -657,7 +651,7 @@ MSc Machine Learning Researcher & Biostatistician
 
 **Email:** `ikechukwukamalu8@gmail.com`
 
-**GitHub:** `github.com/ikechukwukamalu8`
+**GitHub:** [github.com/ikechukwukamalu8](https://github.com/ikechukwukamalu8)
 
 **ORCID:** `0009-0008-3922-6310`
 
