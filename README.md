@@ -4,91 +4,170 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat\&logo=pytorch\&logoColor=white)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An end-to-end implementation of a **probabilistic deep ensemble** integrated with **Split Conformal Prediction** runtime verification and **unsupervised Test-Time Adaptation (TTA)** under severe input sensor drift.
+An end-to-end implementation of a **probabilistic deep ensemble** integrated with **split conformal calibration**, **runtime safety verification**, and **unsupervised Test-Time Adaptation (TTA)** under simulated input sensor drift.
 
-Developed as part of computational research into safe AI architectures, runtime verification, and out-of-distribution (OOD) robustness.
+Developed as part of computational research into safe AI architectures, runtime verification, uncertainty quantification, and out-of-distribution (OOD) robustness.
 
 ---
 
 ## Key Features
 
-* **Probabilistic Deep Ensemble:**
-  An $M$-member neural network ensemble estimating predictive mean $\mu(x)$ and log-variance $\log\sigma^2(x)$ under Gaussian Negative Log-Likelihood (NLL) loss.
+### Probabilistic Deep Ensemble
 
-* **Uncertainty Decomposition:**
-  Separates predictive variance into **epistemic uncertainty** (model disagreement across ensemble members) and **aleatoric uncertainty** (inherent data noise).
+An (M)-member neural-network ensemble estimates a predictive mean and predictive variance for each input:
 
-* **Split Conformal Prediction Shield:**
-  Calibrates a certified non-conformity threshold $\hat{q}_{\text{epistemic}}$ on clean calibration data at a target coverage guarantee of:
+[
+\left{
+\mu_m(x),\sigma_m^2(x)
+\right}_{m=1}^{M}.
+]
 
-  $$1 - \alpha = 0.95$$
+Each ensemble member is trained using a Gaussian Negative Log-Likelihood (NLL) objective, allowing the model to represent both predictive uncertainty and observation noise.
 
-* **Online Test-Time Adaptation (TTA):**
-  Performs unsupervised feature-normalization re-centering during inference using dynamic BatchNorm statistics without requiring true target $y$ labels.
+### Uncertainty Decomposition
 
-* **Runtime Safety Projection:**
-  A safety guard monitors range invariants:
+The ensemble separates predictive uncertainty into:
 
-  $$y \in [y_{\min}, y_{\max}]$$
+* **Epistemic uncertainty** — uncertainty associated with model disagreement.
+* **Aleatoric uncertainty** — uncertainty associated with inherent observation noise.
 
-  together with epistemic uncertainty limits, projecting out-of-bound predictions back into certified safety boundaries.
+### Split Conformal Calibration
+
+A calibration dataset is used to estimate a non-conformity threshold for the epistemic-uncertainty score.
+
+For the reported experiment, the target miscoverage level is:
+
+[
+\alpha = 0.05,
+]
+
+corresponding to a nominal calibration level of:
+
+[
+1-\alpha = 0.95.
+]
+
+The resulting calibrated epistemic threshold is:
+
+[
+\hat{q}_{\text{epistemic}} = 0.005192.
+]
+
+> **Important:** This threshold is a calibrated bound on the selected uncertainty score under the assumptions of the conformal calibration procedure. It should not be interpreted as an unconditional 95% prediction-coverage guarantee under arbitrary distribution shift.
+
+### Online Test-Time Adaptation (TTA)
+
+The system performs unsupervised feature-normalization re-centering during inference using dynamic BatchNorm statistics.
+
+No target-domain ground-truth labels are required during test-time adaptation.
+
+### Runtime Safety Projection
+
+A runtime safety layer monitors output-range invariants:
+
+[
+y \in [y_{\min},y_{\max}]
+]
+
+together with the calibrated epistemic-uncertainty threshold.
+
+Predictions that violate the configured output constraints can be projected back into the permitted safety range.
 
 ---
 
 ## Empirical Benchmark Results
 
-The system was evaluated under active physical sensor calibration drift with:
+The system was evaluated under simulated physical sensor calibration drift with:
 
-$$\delta = +1.5$$
+[
+\delta = +1.5.
+]
 
-applied to the input process data.
+The experiment used 400 test samples.
 
-| Metric                          | Pre-Adaptation (Fixed Training Stats) | Post-Adaptation (Dynamic TTA) |      Performance Delta      |
-| :------------------------------ | :-----------------------------------: | :---------------------------: | :-------------------------: |
-| **Raw Test MSE**                |                `0.7578`               |          **`0.0137`**         |     **98.19% Reduction**    |
-| **Safety Intercepts Triggered** |               `0 / 400`               |           `0 / 400`           |     Satisfied Invariants    |
-| **Calibrated Epistemic Bound**  |               `0.005192`              |           `0.005192`          | Certified ($\alpha = 0.05$) |
+| Metric                          | Pre-Adaptation (Fixed Training Statistics) | Post-Adaptation (Dynamic TTA) |      Performance Delta |
+| :------------------------------ | -----------------------------------------: | ----------------------------: | ---------------------: |
+| **Raw Test MSE**                |                                   `0.7578` |                  **`0.0137`** |   **98.19% reduction** |
+| **Safety Intercepts Triggered** |                                  `0 / 400` |                     `0 / 400` | No violations observed |
+| **Calibrated Epistemic Bound**  |                                 `0.005192` |                    `0.005192` |              Unchanged |
 
 ### Benchmark Interpretation
 
-Under the simulated sensor calibration drift, dynamic TTA substantially reduced the raw test MSE from `0.7578` to `0.0137`, representing a **98.19% reduction in error**.
+Under the simulated sensor calibration drift, dynamic TTA reduced the raw test MSE from:
+
+[
+0.7578
+]
+
+to:
+
+[
+0.0137.
+]
+
+This corresponds to a relative reduction of approximately:
+
+[
+98.19%.
+]
 
 At the same time, the runtime safety layer reported:
 
 * **0/400 safety intercepts** before adaptation.
 * **0/400 safety intercepts** after adaptation.
-* A stable calibrated epistemic uncertainty bound of **0.005192**.
-* A target conformal error rate of $\alpha = 0.05$.
+* A calibrated epistemic-uncertainty threshold of **0.005192**.
+* A nominal conformal miscoverage level of:
 
-These results demonstrate the intended interaction between **distribution-shift adaptation**, **uncertainty estimation**, and **runtime safety verification**.
+[
+\alpha = 0.05.
+]
+
+These results demonstrate the intended interaction between **distribution-shift adaptation**, **uncertainty estimation**, **conformal calibration**, and **runtime safety verification**.
 
 ---
 
 ## Mathematical Formulation
 
-### 1. Epistemic & Aleatoric Variance Decomposition
+### 1. Ensemble Predictive Mean
 
-For ensemble predictions:
+For an (M)-member ensemble, let the (m)-th model produce:
 
-$$
-{\mu_m(x), \sigma_m^2(x)}_{m=1}^{M}
-$$
+[
+\mu_m(x)
+]
 
-the ensemble predictive mean is:
+and
 
-$$
+[
+\sigma_m^2(x).
+]
+
+The ensemble predictive mean is:
+
+[
+\boxed{
 \mu_{\text{ensemble}}(x)
 ========================
 
 \frac{1}{M}
 \sum_{m=1}^{M}
 \mu_m(x)
-$$
+}
+]
 
-The epistemic variance, representing model disagreement, is:
+where (M) is the number of ensemble members.
 
-$$
-\sigma^2_{\text{epistemic}}(x)
+---
+
+### 2. Epistemic Uncertainty
+
+Epistemic uncertainty is estimated from disagreement between ensemble members.
+
+Using the sample variance of the ensemble means:
+
+[
+\boxed{
+\sigma_{\text{epistemic}}^2(x)
 ==============================
 
 \frac{1}{M-1}
@@ -99,93 +178,201 @@ $$
 
 \mu_{\text{ensemble}}(x)
 \right)^2
-$$
+}
+]
 
-The total predictive variance is decomposed as:
+A larger value indicates greater disagreement among the ensemble members.
 
-$$
-\sigma^2_{\text{total}}(x)
+---
+
+### 3. Aleatoric Uncertainty
+
+Each ensemble member predicts an observation-noise variance:
+
+[
+\sigma_m^2(x).
+]
+
+The ensemble-average aleatoric variance is:
+
+[
+\boxed{
+\sigma_{\text{aleatoric}}^2(x)
+==============================
+
+\frac{1}{M}
+\sum_{m=1}^{M}
+\sigma_m^2(x)
+}
+]
+
+This represents the average data-dependent uncertainty estimated by the ensemble.
+
+---
+
+### 4. Total Predictive Variance
+
+The total predictive variance can be decomposed into epistemic and aleatoric components:
+
+[
+\boxed{
+\sigma_{\text{total}}^2(x)
 ==========================
 
-\sigma^2_{\text{epistemic}}(x)
+\sigma_{\text{epistemic}}^2(x)
++
+\sigma_{\text{aleatoric}}^2(x)
+}
+]
+
+or equivalently:
+
+[
+\boxed{
+\sigma_{\text{total}}^2(x)
+==========================
+
+\frac{1}{M-1}
+\sum_{m=1}^{M}
+\left(
+\mu_m(x)
+--------
+
+\mu_{\text{ensemble}}(x)
+\right)^2
 +
 \frac{1}{M}
 \sum_{m=1}^{M}
 \sigma_m^2(x)
-$$
+}
+]
 
 where:
 
-* $\sigma^2_{\text{epistemic}}$ represents **epistemic uncertainty**.
-* $\sigma_m^2$ represents **aleatoric uncertainty** for ensemble member $m$.
-* $\sigma^2_{\text{total}}$ represents the combined predictive uncertainty.
+* (\sigma_{\text{epistemic}}^2(x)) represents **model-disagreement uncertainty**.
+* (\sigma_{\text{aleatoric}}^2(x)) represents **data-dependent observation noise**.
+* (\sigma_{\text{total}}^2(x)) represents the combined predictive variance.
 
 ---
 
-### 2. Conformal Prediction Bound
+## Conformal Calibration
 
-Given a calibration dataset:
+Let the calibration dataset be:
 
-$$
+[
 D_{\text{calib}}
-$$
+================
 
-and an error rate:
-
-$$
-\alpha = 0.05
-$$
-
-the non-conformity threshold is computed from the empirical distribution of epistemic uncertainty:
-
-$$
-\hat{q}
-=======
-
-\text{Quantile}
-\left(
 \left{
-\sigma^2_{\text{epistemic}}(x_i)
-\right}*{i=1}^{N*{\text{calib}}},
-\frac{
+x_i
+\right}*{i=1}^{N*{\text{calib}}}.
+]
+
+For each calibration sample, define the epistemic uncertainty score:
+
+[
+s_i
+===
+
+\sigma_{\text{epistemic}}^2(x_i).
+]
+
+The target miscoverage level is:
+
+[
+\alpha = 0.05.
+]
+
+The finite-sample conformal quantile index is:
+
+[
+k
+=
+
 \left\lceil
 (N_{\text{calib}}+1)(1-\alpha)
-\right\rceil
-}{
-N_{\text{calib}}
-}
-\right)
-$$
+\right\rceil.
+]
 
-The resulting threshold provides the runtime verification boundary used by the conformal safety shield.
+The calibrated threshold is then obtained from the corresponding empirical order statistic:
+
+[
+\boxed{
+\hat{q}_{\text{epistemic}}
+==========================
+
+s_{(k)}
+}
+]
+
+where (s_{(k)}) denotes the (k)-th smallest calibration score, subject to the usual finite-sample conformal quantile convention.
 
 For the reported experiment:
 
-$$
-\hat{q}_{\text{epistemic}} = 0.005192
-$$
+[
+\boxed{
+\hat{q}_{\text{epistemic}}
+==========================
+
+0.005192
+}
+]
 
 with:
 
-$$
-\alpha = 0.05
-$$
+[
+\alpha = 0.05.
+]
 
-and therefore a nominal target coverage of:
+Therefore, the nominal calibration level is:
 
-$$
+[
+\boxed{
 1-\alpha = 0.95
-$$
+}
+]
+
+### Interpretation
+
+The calibrated threshold provides a reference boundary for the epistemic-uncertainty score during runtime monitoring.
+
+The conformal interpretation depends on the assumptions of the calibration procedure, including the relevant exchangeability assumptions. The nominal (95%) level should therefore **not** be interpreted as an unconditional guarantee under arbitrary distribution shift.
+
+---
+
+## Runtime Uncertainty Check
+
+During inference, the epistemic uncertainty is compared with the calibrated threshold:
+
+[
+\boxed{
+\sigma_{\text{epistemic}}^2(x)
+\leq
+\hat{q}_{\text{epistemic}}
+}
+]
+
+If:
+
+[
+\sigma_{\text{epistemic}}^2(x)
+
+>
+
+\hat{q}_{\text{epistemic}},
+]
+
+the sample is considered to exhibit elevated model disagreement and can be flagged by the runtime safety mechanism according to the implementation.
 
 ---
 
 ## System Architecture
 
-The overall pipeline can be summarized as:
+The overall pipeline is:
 
 ```text
                  ┌──────────────────────────┐
-                 │      Input Process x     │
+                 │       Input Process x    │
                  └────────────┬─────────────┘
                               │
                               ▼
@@ -196,14 +383,14 @@ The overall pipeline can be summarized as:
                               │
                               ▼
                  ┌──────────────────────────┐
-                 │     Test-Time Adaptation │
+                 │  Test-Time Adaptation    │
                  │          (TTA)           │
-                 │ Dynamic BatchNorm Stats  │
+                 │  Dynamic BatchNorm Stats │
                  └────────────┬─────────────┘
                               │
                               ▼
               ┌────────────────────────────────┐
-              │       Deep Ensemble            │
+              │          Deep Ensemble         │
               │                                │
               │  Model 1 → μ₁, σ₁²             │
               │  Model 2 → μ₂, σ₂²             │
@@ -220,16 +407,16 @@ The overall pipeline can be summarized as:
                               │
                               ▼
                  ┌──────────────────────────┐
-                 │ Conformal Safety Shield  │
+                 │   Conformal Calibration  │
                  │                          │
                  │ σ²_epistemic ≤ q̂         │
                  └────────────┬─────────────┘
                               │
                               ▼
                  ┌──────────────────────────┐
-                 │ Runtime Safety Projection│
+                 │   Runtime Safety Guard   │
                  │                          │
-                 │ y ∈ [ymin, ymax]          │
+                 │ y ∈ [ymin, ymax]         │
                  └────────────┬─────────────┘
                               │
                               ▼
@@ -246,27 +433,25 @@ The overall pipeline can be summarized as:
 Resilient-Deep-Ensemble-TTA/
 │
 ├── main.py              # Main execution script
-├── README.md            # Comprehensive repository documentation
+├── README.md            # Repository documentation
 └── .gitignore           # Python temporary files and cache exclusion
 ```
 
 ---
 
-## Quick Start & Local Execution
+## Quick Start
 
 ### Prerequisites
 
-Ensure that **Python 3.8 or later** is installed.
+Python **3.8 or later** is required.
 
-Install the required dependencies:
+Install the dependencies:
 
 ```bash
 pip install torch numpy matplotlib
 ```
 
----
-
-## Running in Terminal
+### Run the Experiment
 
 Navigate to the repository directory and execute:
 
@@ -274,7 +459,17 @@ Navigate to the repository directory and execute:
 python main.py
 ```
 
-The program will train/evaluate the ensemble, perform calibration, execute TTA under sensor drift, apply the runtime safety shield, and generate the diagnostic visualization.
+The program will:
+
+1. Train/evaluate the ensemble.
+2. Estimate predictive uncertainty.
+3. Perform conformal calibration.
+4. Introduce the simulated sensor drift.
+5. Evaluate the pre-TTA model.
+6. Perform unsupervised TTA.
+7. Evaluate the post-TTA model.
+8. Apply the runtime safety mechanism.
+9. Generate diagnostic visualizations.
 
 ---
 
@@ -291,60 +486,84 @@ The program will train/evaluate the ensemble, perform calibration, execute TTA u
 
 Upon execution, the script generates a **two-panel diagnostic plot**.
 
-### Left Plot — Runtime Safety Shield & Online TTA
+### Left Panel — Runtime Safety Shield & Online TTA
 
 The left panel compares:
 
 * Pre-adaptation predictions using fixed training statistics.
 * Post-adaptation predictions using dynamic TTA.
-* Ground-truth process values under sensor drift.
-* Runtime safety boundaries.
+* Ground-truth process values under simulated sensor drift.
+* Configured runtime safety boundaries.
 
-This visualization demonstrates the ability of TTA to compensate for distributional changes in the input sensor data.
+This visualization illustrates how TTA compensates for the simulated input-distribution shift.
 
-### Right Plot — Epistemic Uncertainty & Conformal Threshold
+### Right Panel — Epistemic Uncertainty & Calibration Threshold
 
 The right panel displays:
 
-* The epistemic uncertainty distribution.
-* The calibrated conformal verification threshold.
-* The relationship between runtime uncertainty and the certified uncertainty boundary.
+* Epistemic uncertainty values.
+* The calibrated epistemic threshold.
+* The relationship between runtime uncertainty and the calibration boundary.
 
-The threshold is:
+The reported threshold is:
 
-$$
-\hat{q}_{\text{epistemic}} = 0.005192
-$$
+[
+\boxed{
+\hat{q}_{\text{epistemic}}
+==========================
+
+0.005192
+}
+]
 
 ---
 
 ## Safety Mechanism
 
-The runtime safety layer combines two primary checks.
+The runtime safety layer combines two principal checks.
 
 ### 1. Output Range Invariant
 
-Predictions must satisfy:
+The predicted output must satisfy:
 
-$$
-y \in [y_{\min}, y_{\max}]
-$$
+[
+\boxed{
+y \in [y_{\min},y_{\max}]
+}
+]
 
-Predictions outside this interval are projected back into the certified output range.
+If a prediction falls outside the configured interval, it can be projected back into the permitted range.
+
+Conceptually:
+
+[
+\boxed{
+y_{\text{safe}}
+===============
+
+\min
+\left(
+\max(y,y_{\min}),
+y_{\max}
+\right)
+}
+]
 
 ### 2. Epistemic Uncertainty Constraint
 
-The epistemic uncertainty is compared against the calibrated conformal threshold:
+The estimated epistemic uncertainty is compared against the calibrated threshold:
 
-$$
-\sigma^2_{\text{epistemic}}(x)
+[
+\boxed{
+\sigma_{\text{epistemic}}^2(x)
 \leq
 \hat{q}_{\text{epistemic}}
-$$
+}
+]
 
-If the uncertainty exceeds the calibrated limit, the runtime safety mechanism can flag or constrain the prediction according to the implementation.
+If the threshold is exceeded, the runtime system can flag the prediction or apply the configured safety response.
 
-This provides an additional layer of protection against predictions made under conditions where the ensemble exhibits excessive model disagreement.
+This creates an additional monitoring layer for situations in which the ensemble exhibits unusually high model disagreement.
 
 ---
 
@@ -352,7 +571,7 @@ This provides an additional layer of protection against predictions made under c
 
 The TTA mechanism operates without requiring target labels during inference.
 
-The core principle is to update feature-normalization statistics to accommodate the shifted input distribution.
+The core principle is to adapt feature-normalization statistics to accommodate the shifted input distribution.
 
 Conceptually:
 
@@ -361,7 +580,6 @@ Training Distribution
         │
         ▼
 Fixed BatchNorm Statistics
-        │
         │
         ├──────────────► Pre-TTA Prediction
         │
@@ -375,7 +593,7 @@ Dynamic Feature Re-Centering
 Post-TTA Prediction
 ```
 
-This enables the model to adapt to sensor calibration drift while preserving the unsupervised nature of test-time inference.
+The adaptation process is unsupervised with respect to the target labels and is intended to compensate for changes in the input distribution caused by sensor calibration drift.
 
 ---
 
@@ -383,27 +601,27 @@ This enables the model to adapt to sensor calibration drift while preserving the
 
 The reported experiment uses:
 
-| Configuration              |      Value      |
-| :------------------------- | :-------------: |
-| Sensor drift               | $\delta = +1.5$ |
-| Target conformal coverage  |      $95%$      |
-| Conformal error rate       | $\alpha = 0.05$ |
-| Calibrated epistemic bound |    `0.005192`   |
-| Test samples               |      `400`      |
-| Pre-TTA MSE                |     `0.7578`    |
-| Post-TTA MSE               |     `0.0137`    |
-| MSE reduction              |     `98.19%`    |
-| Pre-TTA safety intercepts  |    `0 / 400`    |
-| Post-TTA safety intercepts |    `0 / 400`    |
+| Configuration               |      Value      |
+| :-------------------------- | :-------------: |
+| Sensor drift                | (\delta = +1.5) |
+| Target conformal level      |      (95%)      |
+| Conformal miscoverage level | (\alpha = 0.05) |
+| Calibrated epistemic bound  |    `0.005192`   |
+| Test samples                |      `400`      |
+| Pre-TTA MSE                 |     `0.7578`    |
+| Post-TTA MSE                |     `0.0137`    |
+| MSE reduction               |     `98.19%`    |
+| Pre-TTA safety intercepts   |    `0 / 400`    |
+| Post-TTA safety intercepts  |    `0 / 400`    |
 
 ---
 
 ## Reproducibility
 
-To reproduce the reported experiment:
+Clone the repository and install the required dependencies:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/ikechukwukamalu8/Resilient-Deep-Ensemble-TTA.git
 cd Resilient-Deep-Ensemble-TTA
 
 pip install torch numpy matplotlib
@@ -411,27 +629,27 @@ pip install torch numpy matplotlib
 python main.py
 ```
 
-The implementation is designed to run locally using standard Python execution environments, including:
+The implementation is designed to run in standard Python environments, including:
 
 * Python Terminal
 * Windows Command Prompt
 * PowerShell
 * Python IDLE
-* Compatible IDEs
+* Compatible Python IDEs
 
 ---
 
 ## Research Context
 
-This implementation explores the combination of three complementary approaches to reliable machine learning:
+This implementation explores the combination of three complementary approaches to reliable machine learning.
 
 ### Probabilistic Deep Ensembles
 
 Deep ensembles provide multiple predictive models whose disagreement can be used as an empirical estimate of epistemic uncertainty.
 
-### Conformal Prediction
+### Conformal Calibration
 
-Split conformal calibration provides a distribution-free mechanism for constructing uncertainty or verification thresholds under exchangeability assumptions.
+Split conformal calibration provides a distribution-free framework for calibrating non-conformity scores under the assumptions required by the selected conformal procedure.
 
 ### Test-Time Adaptation
 
@@ -439,29 +657,69 @@ TTA enables models to respond to distributional changes encountered during deplo
 
 Together, these components form a layered architecture:
 
-$$
+[
 \boxed{
 \text{Adaptation}
 +
 \text{Uncertainty Estimation}
 +
-\text{Conformal Verification}
+\text{Conformal Calibration}
 +
 \text{Runtime Safety}
 }
-$$
+]
 
-The objective is not simply to improve predictive accuracy, but to combine **adaptation and prediction with explicit runtime safety mechanisms**.
+The objective is not simply to improve predictive accuracy, but to combine **adaptation, uncertainty estimation, statistical calibration, and explicit runtime safety mechanisms**.
 
 ---
 
-## Important Statistical Note
+## Important Statistical Notes
 
-The conformal guarantee should be interpreted under the assumptions required by the specific conformal procedure, particularly the relevant exchangeability or calibration assumptions.
+### Conformal Calibration
 
-The reported `95%` coverage is therefore a **nominal conformal target**, rather than an unconditional guarantee under arbitrary distribution shift.
+The reported (95%) level should be interpreted as a **nominal conformal calibration level** under the assumptions of the specific conformal procedure.
 
-Likewise, improved MSE under the simulated drift condition does not by itself establish robustness to every possible real-world sensor failure or distribution shift.
+In particular, conformal guarantees rely on appropriate calibration and exchangeability assumptions. They should not be interpreted as unconditional guarantees under arbitrary distribution shift.
+
+### Sensor Drift
+
+The reported experiment uses a simulated sensor calibration drift:
+
+[
+\delta = +1.5.
+]
+
+Consequently, the observed improvement should be interpreted specifically within the experimental setting represented by the implementation.
+
+### MSE Improvement
+
+The reduction from:
+
+[
+0.7578
+]
+
+to:
+
+[
+0.0137
+]
+
+demonstrates substantial improvement under the reported simulated drift condition.
+
+However, this result alone does not establish robustness against every possible real-world sensor failure, adversarial perturbation, or unseen distribution shift.
+
+### Safety Intercepts
+
+The reported:
+
+[
+0/400
+]
+
+safety intercept count means that no runtime safety intervention was recorded for the evaluated test samples under the configured conditions.
+
+It does **not** imply that the safety mechanism would never trigger under other operating conditions.
 
 ---
 
@@ -476,6 +734,7 @@ See the repository license file for the complete license terms.
 ## Author & Citation
 
 **Ikechukwu Okechi Kamalu**
+
 MSc Machine Learning Researcher & Biostatistician
 
 **Email:** `ikechukwukamalu8@gmail.com`
@@ -486,7 +745,7 @@ MSc Machine Learning Researcher & Biostatistician
 
 ### Citation
 
-If you use this implementation in academic or research work, please cite the project and acknowledge the author.
+If you use this implementation in academic or research work, please cite the project and acknowledge the author:
 
 ```text
 Ikechukwu Okechi Kamalu
@@ -498,17 +757,54 @@ Resilient Deep Ensemble with Conformal Safety Shield
 
 ## Project Summary
 
-This project provides an end-to-end framework for investigating **safe and adaptive probabilistic machine learning under sensor distribution shift**.
+This project provides an end-to-end computational framework for investigating **safe and adaptive probabilistic machine learning under sensor distribution shift**.
 
 The architecture combines:
 
 1. **Probabilistic deep ensembles** for predictive uncertainty.
 2. **Epistemic/aleatoric uncertainty decomposition**.
-3. **Split conformal calibration** for uncertainty-based runtime verification.
-4. **Unsupervised test-time adaptation** for sensor drift.
+3. **Split conformal calibration** for uncertainty-score thresholding.
+4. **Unsupervised test-time adaptation** for simulated sensor drift.
 5. **Runtime safety projection** for enforcing output invariants.
 6. **Diagnostic visualization** for evaluating adaptation and uncertainty.
 
-Under the reported simulated sensor drift of $\delta = +1.5$, the system reduced test MSE from `0.7578` to `0.0137`, corresponding to a **98.19% reduction**, while the runtime safety monitor recorded **0 safety intercepts across 400 test samples**.
+Under the reported simulated sensor drift of:
 
-The project therefore serves as a computational research framework for studying the intersection of **deep ensembles, uncertainty quantification, conformal prediction, test-time adaptation, runtime verification, and safe AI**.
+[
+\delta = +1.5,
+]
+
+the system reduced test MSE from:
+
+[
+0.7578
+]
+
+to:
+
+[
+0.0137,
+]
+
+corresponding to a **98.19% reduction in MSE**.
+
+The runtime safety monitor recorded:
+
+[
+0/400
+]
+
+safety intercepts across the evaluated test samples.
+
+The calibrated epistemic threshold was:
+
+[
+\hat{q}_{\text{epistemic}}
+==========================
+
+0.005192.
+]
+
+Overall, the project provides a computational framework for studying the intersection of:
+
+**deep ensembles → uncertainty quantification → conformal calibration → test-time adaptation → runtime verification → safe AI.**
