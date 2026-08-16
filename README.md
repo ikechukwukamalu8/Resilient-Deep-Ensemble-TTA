@@ -529,15 +529,15 @@ See the repository license file for the complete license terms.
 
 ## Author & Citation
 
-**Ikechukwu Okechi Kamalu**
+**Ikechukwu Okechi Kamalu, MSc**
 
-MSc Machine Learning Researcher & Biostatistician
+Machine Learning Researcher & Biostatistician
 
 **Email:** `ikechukwukamalu8@gmail.com`
 
-**GitHub:** `github.com/ikechukwuKamalu8`
+**GitHub:** `[github.com/ikechukwuKamalu8]([url](https://github.com/ikechukwukamalu8))`
 
-**ORCID:** `0009-0008-3922-6310`
+**ORCID:** `[0009-0008-3922-6310]([url](https://orcid.org/0009-0008-3922-6310))`
 
 ### Citation
 
