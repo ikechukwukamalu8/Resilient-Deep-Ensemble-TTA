@@ -526,18 +526,17 @@ This project is released under the **MIT License**.
 See the repository license file for the complete license terms.
 
 ---
-
 ## Author & Citation
 
 **Ikechukwu Okechi Kamalu, MSc**
 
 Machine Learning Researcher & Biostatistician
 
-**Email:** `ikechukwukamalu8@gmail.com`
+**Email:** ikechukwukamalu8@gmail.com
 
-**GitHub:** `[github.com/ikechukwuKamalu8]([url](https://github.com/ikechukwukamalu8))`
+**ORCID:** https://orcid.org/0009-0008-3922-6310
 
-**ORCID:** `[0009-0008-3922-6310]([url](https://orcid.org/0009-0008-3922-6310))`
+**GitHub:** https://github.com/ikechukwukamalu8
 
 ### Citation
 
